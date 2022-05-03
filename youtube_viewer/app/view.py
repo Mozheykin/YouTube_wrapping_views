@@ -10,10 +10,12 @@ from random_user_agent.params import SoftwareName, OperatingSystem, HardwareType
 from loguru import logger
 from seleniumwire import webdriver
 from pathlib import Path
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.common.exceptions import NoSuchElementException
 
 logger.add('debug.log', format='{time} {level} {message}', compression='zip', 
             rotation='10 MB')
+
 THREAD_COUNT = 5
 BASE_DIR = Path(__file__).resolve().parent
 DB_NAME = 'db.sqlite3'
@@ -21,6 +23,13 @@ DIR_DB = os.path.join(BASE_DIR.parent, DB_NAME)
 NAME_DRIVER = 'geckodriver'
 DIR_DRIVER = os.path.join(BASE_DIR, NAME_DRIVER)
 
+def take_agent():
+    if os.path.isfile('user_agents.txt'):
+        with open('user_agents.txt', 'r') as file:
+            return [line for line in file.readlines()]
+    return False
+
+user_agent = take_agent()
 
 software_names = [
     SoftwareName.CHROME.value, 
@@ -52,8 +61,8 @@ class Prototipe:
         self.url = 'https://youtube.com'
         self.name_video = name_video
         self.target_url = f'/{target_url.split("/")[-1]}'
-        self.user_agent = self.take_agent()
-        if self.user_agent == False:
+        
+        if user_agent == False:
             user_agent_rotator = UserAgent(
                 operating_systems=operating_systems, 
                 software_names=software_names, 
@@ -62,6 +71,8 @@ class Prototipe:
                 limit=100
                 )
             self.user_agent = user_agent_rotator.get_random_user_agent()
+        else:
+            self.user_agent = random.choice(user_agent)
         self.ip, self.port, login, password = proxy.split(':')
         proxy_options = {
             'proxy': {
@@ -70,21 +81,17 @@ class Prototipe:
             }
         }
         options = webdriver.FirefoxOptions()
-        options.add_argument('--headless')
+        # options.add_argument('--headless')
         options.set_preference('general.useragent.override', self.user_agent)
         options.set_preference('dom.webdriver.enabled', False)
+        binary = FirefoxBinary('~/snap/firefox/common/.mozilla/firefox/0u4ev37b.default')
         self.driver = webdriver.Firefox(
+            firefox_binary=binary,
             executable_path=DIR_DRIVER,
             seleniumwire_options=proxy_options,
-            options=options
+            options=options,
         )
 
-
-    def take_agent(self):
-        if os.path.isfile('user_agents.txt'):
-            with open('user_agents.txt', 'r') as file:
-                return [line for line in file.readlines()]
-        return False
 
     def check_exists_by_xpath(self, xpath:str):
         try:
