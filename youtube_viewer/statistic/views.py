@@ -4,6 +4,7 @@ from .models import Video, Work
 from .forms import VideoForm
 import os
 from pathlib import Path
+import threading
 
 def not_found(request):
     return render(request, 'statistic/404.html')
@@ -58,12 +59,16 @@ def change(request, pk):
     return render(request, 'statistic/change.html', context)
 
 
+def start():
+    directory_script = os.path.join(Path(__file__).resolve().parent.parent, "app/view.py")
+    os.system(f'python3 {directory_script}')
+
+
 @login_required(login_url='not_found')
 def Play(request):
 
     if request.method == 'POST':
-        directory_script = os.path.join(Path(__file__).resolve().parent.parent, "app/view.py")
-        os.system(f'python3 {directory_script}')
+        threading.Thread(target=start, daemon=True).start()
         return redirect('main')
     
     return render(request, 'statistic/play.html', {})
