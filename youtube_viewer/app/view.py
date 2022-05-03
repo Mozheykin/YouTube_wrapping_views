@@ -3,9 +3,7 @@ import multiprocessing
 import time
 import random
 import os
-# from app import database
 import database
-import requests
 
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem, HardwareType, Popularity
@@ -22,6 +20,8 @@ DB_NAME = 'db.sqlite3'
 DIR_DB = os.path.join(BASE_DIR.parent, DB_NAME)
 NAME_DRIVER = 'geckodriver'
 DIR_DRIVER = os.path.join(BASE_DIR, NAME_DRIVER)
+
+
 software_names = [
     SoftwareName.CHROME.value, 
     SoftwareName.ANDROID.value, 
@@ -48,40 +48,37 @@ popularity = [
 
 class Prototipe:
     def __init__(self, target_url:str, proxy:str, name_video:str) -> None:
-        try:
-            self.proxy = proxy
-            self.url = 'https://youtube.com'
-            self.name_video = name_video
-            self.target_url = f'/{target_url.split("/")[-1]}'
-            self.user_agent = self.take_agent
-            if self.user_agent == False:
-                user_agent_rotator = UserAgent(
-                    operating_systems=operating_systems, 
-                    software_names=software_names, 
-                    hardware_types=hardware_types, 
-                    popularity=popularity,
-                    limit=100
-                    )
-                self.user_agent = user_agent_rotator.get_random_user_agent()
-            self.ip, self.port, login, password = proxy.split(':')
-            proxy_options = {
-                'proxy': {
-                    'http': f'http://{login}:{password}@{self.ip}:{self.port}',
-                    'https': f'http://{login}:{password}@{self.ip}:{self.port}'
-                }
+        self.proxy = proxy
+        self.url = 'https://youtube.com'
+        self.name_video = name_video
+        self.target_url = f'/{target_url.split("/")[-1]}'
+        self.user_agent = self.take_agent()
+        if self.user_agent == False:
+            user_agent_rotator = UserAgent(
+                operating_systems=operating_systems, 
+                software_names=software_names, 
+                hardware_types=hardware_types, 
+                popularity=popularity,
+                limit=100
+                )
+            self.user_agent = user_agent_rotator.get_random_user_agent()
+        self.ip, self.port, login, password = proxy.split(':')
+        proxy_options = {
+            'proxy': {
+                'http': f'http://{login}:{password}@{self.ip}:{self.port}',
+                'https': f'http://{login}:{password}@{self.ip}:{self.port}'
             }
-            options = webdriver.FirefoxOptions()
-            options.add_argument('--headless')
-            options.set_preference('general.useragent.override', self.user_agent)
-            options.set_preference('dom.webdriver.enabled', False)
-            self.driver = webdriver.Firefox(
-                executable_path=DIR_DRIVER,
-                seleniumwire_options=proxy_options,
-                options=options
-            )
-            self.check_status_code()
-        except Exception as ex:
-            logger.error(ex)
+        }
+        options = webdriver.FirefoxOptions()
+        options.add_argument('--headless')
+        options.set_preference('general.useragent.override', self.user_agent)
+        options.set_preference('dom.webdriver.enabled', False)
+        self.driver = webdriver.Firefox(
+            executable_path=DIR_DRIVER,
+            seleniumwire_options=proxy_options,
+            options=options
+        )
+
 
     def take_agent(self):
         if os.path.isfile('user_agents.txt'):
@@ -191,6 +188,7 @@ def get_thread(video: list):
                     POOL,
                 ),
                 name=f'{NAME_PROCESS} {video[3]}',
+                daemon=True,
             )
             ThreadingVideo.start()
             time.sleep(random.randint(1, 5))

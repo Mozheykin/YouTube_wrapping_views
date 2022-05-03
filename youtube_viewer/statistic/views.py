@@ -2,10 +2,8 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from .models import Video, Work
 from .forms import VideoForm
-from threading import Thread
-# from ..app import main
-from app.main import add_proxy, start_view_video
-
+import os
+from pathlib import Path
 
 def not_found(request):
     return render(request, 'statistic/404.html')
@@ -59,17 +57,13 @@ def change(request, pk):
     context = {'form': form}
     return render(request, 'statistic/change.html', context)
 
-def start_app():
-    start_view_video('Play:/home/legal/github/youtube_viewer_all/youtube_viewer/db.sqlite3')
-    # add_proxy('/home/legal/github/youtube_viewer_all/youtube_viewer/app/proxy_list.txt:/home/legal/github/youtube_viewer_all/youtube_viewer/db.sqlite3')
-
 
 @login_required(login_url='not_found')
 def Play(request):
 
     if request.method == 'POST':
-        startApp = Thread(target=start_app)
-        startApp.start()
+        directory_script = os.path.join(Path(__file__).resolve().parent.parent, "app/view.py")
+        os.system(f'python3 {directory_script}')
         return redirect('main')
     
     return render(request, 'statistic/play.html', {})
