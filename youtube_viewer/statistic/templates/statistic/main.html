@@ -1,0 +1,51 @@
+<div class="container p-3">
+    <table class="table table-striped table-bordered table-sm text-center">
+        <caption>
+            {% if work.worked %}
+                🟢 Worked 
+            {% else %}
+                🔴 Done
+            {% endif %}
+        </caption>
+        <thead>
+            <tr>
+                <th scope="col">id</th>
+                <th scope="col">Название видео</th>
+                <th scope="col">Кол-во просмотров</th>
+                <th scope="col">Просмотрено</th>
+                <th scope="col">Активно</th>
+                <th scope="col"> Редактирование</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for video in videos %}
+                <tr>
+                    <th scope="col">{{video.video_id}}</th>
+                    <th scope="col">{{video.name}}</th>
+                    <th scope="col">{{video.thread_view}}</th>
+                    <th scope="col">{{video.count_view}}</th>
+                    <th scope="col align-items-center">
+                        {% if video.avalible %}
+                            <span class="badge rounded-pill bg-success">True</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-danger">False</span>
+                        {% endif %}
+                    </th>
+                    <th scope="col">
+                        <a href="{% url 'change' video.video_id %}"><button type="button" class="btn btn-warning">✎ Редактировать</button></a>
+                        <a href="{% url 'delete' video.video_id %}"><button type="button" class="btn btn-danger">❌ Удалить</button></a>
+                    </th>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="container mr-3 text-center">
+        <a href="{% url 'add' %}"><button type="button" class="btn btn-outline-success m-3">➕ Добавить задание</button></a>
+        {% if work.worked %}
+            <a href="#" class="disabled"><button type="button" class="btn btn-success m-3" disabled>Запустить</button></a>
+        {% else %}
+            <a href="{% url 'play' %}"><button type="button" class="btn btn-success m-3">Запустить</button></a>
+        {% endif %}
+        
+    </div>
+</div>
